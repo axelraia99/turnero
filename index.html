@@ -1639,7 +1639,7 @@
   // CONFIGURACIÓN DEL SALÓN
   // =====================================================
   const SALON_WHATSAPP = '5493517333112';
-  const HOURS = { 0:null, 1:[9,21], 2:[9,21], 3:[9,21], 4:[9,21], 5:[9,21], 6:[9,21] }; // 0=domingo cerrado
+  const HOURS = { 0:null, 1:null, 2:[9,21], 3:[9,21], 4:[9,21], 5:[9,21], 6:[9,21] }; // 0=domingo, 1=lunes: cerrado
 
   // Pegá aquí la URL de tu Apps Script (ver google-apps-script.js para el paso a paso)
   const SHEETS_URL = 'https://script.google.com/macros/s/AKfycby5U3RzIw0NSBaSCHKvbDXJ-FyITCLU9gfeCpkLgSGBJVrdPBrP0gXJl2qWvd8UVI2D/exec';
@@ -1821,6 +1821,7 @@
   }
   updateChairsStatus();
   setInterval(updateChairsStatus, 60_000);
+  setInterval(() => { if (selectedDateISO) renderHoras(); }, 30 * 60 * 1000);
 
   // =====================================================
   // CONFIRMAR RESERVA - abre modal con formulario
