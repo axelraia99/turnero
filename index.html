@@ -76,8 +76,8 @@
   }
 
   /* ============ LOGO ============ */
-  .logo-img{height:44px;width:auto;display:block}
-  .logo-img-footer{height:56px;width:auto;display:block;margin-bottom:24px}
+  .logo-img{height:44px;width:auto;display:block;filter:brightness(0) invert(1)}
+  .logo-img-footer{height:56px;width:auto;display:block;margin-bottom:24px;filter:brightness(0) invert(1)}
   .logo-text{
     font-family:'Fraunces',serif;
     font-size:22px;
@@ -1876,9 +1876,20 @@
 
     if (SHEETS_URL && SHEETS_URL !== 'PASTE_YOUR_WEB_APP_URL_HERE') {
       try {
-        const res = await fetch(SHEETS_URL, {
+        // Verificar disponibilidad con GET (sin CORS issues)
+        const ocupados = await fetchOcupados(selectedDateISO);
+        if (ocupados.includes(selectedHora)) {
+          showModalMsg('Ese horario acaba de ser reservado por otra persona. Elegí otro.');
+          btnEnviar.disabled = false;
+          btnEnviar.innerHTML = 'Reservar <span class="arrow">→</span>';
+          renderHoras();
+          return;
+        }
+        // POST con no-cors: el dato llega a Sheets aunque no podamos leer la respuesta
+        await fetch(SHEETS_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita el preflight CORS de Apps Script
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             fecha: selectedDateISO,
             hora: selectedHora,
@@ -1888,14 +1899,6 @@
             telefono: phone,
           }),
         });
-        const data = await res.json();
-        if (!data.ok) {
-          showModalMsg(data.error || 'Ese horario ya no está disponible. Elegí otro.');
-          btnEnviar.disabled = false;
-          btnEnviar.innerHTML = 'Reservar <span class="arrow">→</span>';
-          renderHoras();
-          return;
-        }
       } catch (err) {
         console.error(err);
         showModalMsg('No pudimos guardar el turno en este momento. Probá de nuevo.');
