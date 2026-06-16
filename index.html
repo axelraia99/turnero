@@ -1639,7 +1639,7 @@
   // CONFIGURACIÓN DEL SALÓN
   // =====================================================
   const SALON_WHATSAPP = '5493517333112';
-  const HOURS = { 0:null, 1:[9,20], 2:[9,20], 3:[9,20], 4:[9,20], 5:[9,20], 6:[9,18] }; // 0=domingo cerrado
+  const HOURS = { 0:null, 1:[9,21], 2:[9,21], 3:[9,21], 4:[9,21], 5:[9,21], 6:[9,21] }; // 0=domingo cerrado
 
   // Pegá aquí la URL de tu Apps Script (ver google-apps-script.js para el paso a paso)
   const SHEETS_URL = 'https://script.google.com/macros/s/AKfycby5U3RzIw0NSBaSCHKvbDXJ-FyITCLU9gfeCpkLgSGBJVrdPBrP0gXJl2qWvd8UVI2D/exec';
@@ -1710,9 +1710,13 @@
     if (!range) return [];
     const [openH, closeH] = range;
     const slots = [];
-    for (let h = openH; h < closeH; h++) {
-      slots.push(`${String(h).padStart(2,'0')}:00`);
-      slots.push(`${String(h).padStart(2,'0')}:30`);
+    let minutes = openH * 60;
+    const endMinutes = closeH * 60;
+    while (minutes <= endMinutes) {
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+      minutes += 45;
     }
     return slots;
   }

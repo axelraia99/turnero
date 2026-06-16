@@ -26,13 +26,19 @@
 
 const SHEET_NAME = 'Turnos';
 
+// Columnas: Fecha(0) Hora(1) Servicio(2) Nombre(3) Apellido(4) Telefono(5) Confirmado(6) CreadoEn(7)
+// Un turno está ocupado si existe la fila Y Confirmado != "No confirmó"
+
 function doGet(e) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
   const fecha = e.parameter.fecha;
   const rows = sheet.getDataRange().getValues();
   const ocupados = [];
   for (let i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]) === fecha) ocupados.push(rows[i][1]);
+    const confirmado = String(rows[i][6]).trim();
+    if (String(rows[i][0]) === fecha && confirmado !== 'No confirmó') {
+      ocupados.push(String(rows[i][1]));
+    }
   }
   return ContentService
     .createTextOutput(JSON.stringify({ ocupados }))
@@ -49,12 +55,12 @@ function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
-  // Evita doble reserva: si alguien más ya tomó ese día+hora, lo rechaza.
   const rows = sheet.getDataRange().getValues();
   for (let i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]) === data.fecha && String(rows[i][1]) === data.hora) {
+    const confirmado = String(rows[i][6]).trim();
+    if (String(rows[i][0]) === data.fecha && String(rows[i][1]) === data.hora && confirmado !== 'No confirmó') {
       return ContentService
-        .createTextOutput(JSON.stringify({ ok: false, error: 'Ese horario ya fue reservado por otra persona.' }))
+        .createTextOutput(JSON.stringify({ ok: false, error: 'Ese horario ya fue reservado.' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
   }
@@ -66,6 +72,7 @@ function doPost(e) {
     data.nombre,
     data.apellido || '',
     data.telefono,
+    '', // Confirmado — lo completás vos en la planilla
     new Date(),
   ]);
 
