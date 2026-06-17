@@ -887,27 +887,44 @@
 
   /* ============ TESTIMONIOS ============ */
   .testimonials{
-    padding:120px 40px;
+    padding:120px 0;
+    overflow:hidden;
   }
   .testi-wrap{
     max-width:1400px;
     margin:0 auto;
+    padding:0 40px;
+  }
+  .testi-track-outer{
+    overflow:hidden;
+    mask:linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    -webkit-mask:linear-gradient(to right, transparent, black 8%, black 92%, transparent);
   }
   .testi-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
+    display:flex;
     gap:20px;
+    width:max-content;
+    animation:scrollRight 35s linear infinite;
     margin-bottom:40px;
+  }
+  .testi-grid:hover{ animation-play-state:paused; }
+  @keyframes scrollRight{
+    0%{ transform:translateX(0); }
+    100%{ transform:translateX(-50%); }
   }
   .testi-card{
     background:var(--surface);
     border:1px solid var(--line);
     border-radius:20px;
     padding:32px;
+    width:360px;
+    flex-shrink:0;
+    transition:border-color .2s;
   }
+  .testi-card:hover{ border-color:var(--accent); }
   .testi-quote{
     font-family:'Fraunces',serif;
-    font-size:22px;
+    font-size:20px;
     font-weight:300;
     line-height:1.35;
     margin-bottom:28px;
@@ -928,6 +945,7 @@
     font-family:'Fraunces',serif;
     color:var(--brand-green-deep);
     font-weight:500;
+    flex-shrink:0;
   }
   .testi-meta .name{font-size:14px;font-weight:500}
   .testi-meta .role{font-size:12px;color:var(--ink-dim)}
@@ -1489,46 +1507,79 @@
       </p>
     </div>
 
-    <div class="testi-grid">
-      <div class="testi-card">
-        <div class="testi-stars">★★★★★</div>
-        <p class="testi-quote">
-          "Velocidad y prolijidad en el trabajo. Siempre puntuales con los horarios, se nota la experiencia."
-        </p>
-        <div class="testi-author">
-          <div class="testi-avatar">L</div>
-          <div class="testi-meta">
-            <div class="name">Lucas R.</div>
-            <div class="role">Cliente habitual</div>
-          </div>
+    <div class="testi-track-outer">
+      <div class="testi-grid">
+        <!-- SET 1 -->
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Velocidad y prolijidad en el trabajo. Siempre puntuales con los horarios, se nota la experiencia."</p>
+          <div class="testi-author"><div class="testi-avatar">L</div><div class="testi-meta"><div class="name">Lucas R.</div><div class="role">Cliente habitual</div></div></div>
         </div>
-      </div>
-
-      <div class="testi-card">
-        <div class="testi-stars">★★★★★</div>
-        <p class="testi-quote">
-          "El degradé quedó perfecto, un detalle increíble en las terminaciones. Ya es mi peluquería de cabecera."
-        </p>
-        <div class="testi-author">
-          <div class="testi-avatar">N</div>
-          <div class="testi-meta">
-            <div class="name">Nicolás D.</div>
-            <div class="role">Corte degradé / Fade</div>
-          </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"El degradé quedó perfecto, un detalle increíble en las terminaciones. Ya es mi peluquería de cabecera."</p>
+          <div class="testi-author"><div class="testi-avatar">N</div><div class="testi-meta"><div class="name">Nicolás D.</div><div class="role">Corte degradé / Fade</div></div></div>
         </div>
-      </div>
-
-      <div class="testi-card">
-        <div class="testi-stars">★★★★★</div>
-        <p class="testi-quote">
-          "Hice el combo papá e hijo y salimos los dos con el mismo corte. Atención impecable de principio a fin."
-        </p>
-        <div class="testi-author">
-          <div class="testi-avatar">M</div>
-          <div class="testi-meta">
-            <div class="name">Martín P.</div>
-            <div class="role">Combo Papá + Hijo</div>
-          </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Hice el combo papá e hijo y salimos los dos con el mismo corte. Atención impecable de principio a fin."</p>
+          <div class="testi-author"><div class="testi-avatar">M</div><div class="testi-meta"><div class="name">Martín P.</div><div class="role">Combo Papá + Hijo</div></div></div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Reservé online un viernes a la noche y al otro día estaba sentado en la silla. Sin llamar a nadie. Increíble."</p>
+          <div class="testi-author"><div class="testi-avatar">F</div><div class="testi-meta"><div class="name">Facundo G.</div><div class="role">Primera visita</div></div></div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Me hicieron el afeitado clásico con navaja por primera vez y quedé sorprendido. Nivel de otro mundo."</p>
+          <div class="testi-author"><div class="testi-avatar">S</div><div class="testi-meta"><div class="name">Santiago V.</div><div class="role">Afeitado clásico</div></div></div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Lugar impecable, múscia copada y los chicos super atentos. Cada vez que salgo me siento otra persona."</p>
+          <div class="testi-author"><div class="testi-avatar">E</div><div class="testi-meta"><div class="name">Ezequiel M.</div><div class="role">Cliente mensual</div></div></div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Fui por primera vez con mi hijo de 8 años. Lo trataron bárbaro, salió feliz y con el corte que quería."</p>
+          <div class="testi-author"><div class="testi-avatar">R</div><div class="testi-meta"><div class="name">Rodrigo A.</div><div class="role">Corte infantil</div></div></div>
+        </div>
+        <!-- SET 2 (duplicado para loop infinito) -->
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Velocidad y prolijidad en el trabajo. Siempre puntuales con los horarios, se nota la experiencia."</p>
+          <div class="testi-author"><div class="testi-avatar">L</div><div class="testi-meta"><div class="name">Lucas R.</div><div class="role">Cliente habitual</div></div></div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"El degradé quedó perfecto, un detalle increíble en las terminaciones. Ya es mi peluquería de cabecera."</p>
+          <div class="testi-author"><div class="testi-avatar">N</div><div class="testi-meta"><div class="name">Nicolás D.</div><div class="role">Corte degradé / Fade</div></div></div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Hice el combo papá e hijo y salimos los dos con el mismo corte. Atención impecable de principio a fin."</p>
+          <div class="testi-author"><div class="testi-avatar">M</div><div class="testi-meta"><div class="name">Martín P.</div><div class="role">Combo Papá + Hijo</div></div></div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Reservé online un viernes a la noche y al otro día estaba sentado en la silla. Sin llamar a nadie. Increíble."</p>
+          <div class="testi-author"><div class="testi-avatar">F</div><div class="testi-meta"><div class="name">Facundo G.</div><div class="role">Primera visita</div></div></div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Me hicieron el afeitado clásico con navaja por primera vez y quedé sorprendido. Nivel de otro mundo."</p>
+          <div class="testi-author"><div class="testi-avatar">S</div><div class="testi-meta"><div class="name">Santiago V.</div><div class="role">Afeitado clásico</div></div></div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Lugar impecable, múscia copada y los chicos super atentos. Cada vez que salgo me siento otra persona."</p>
+          <div class="testi-author"><div class="testi-avatar">E</div><div class="testi-meta"><div class="name">Ezequiel M.</div><div class="role">Cliente mensual</div></div></div>
+        </div>
+        <div class="testi-card">
+          <div class="testi-stars">★★★★★</div>
+          <p class="testi-quote">"Fui por primera vez con mi hijo de 8 años. Lo trataron bárbaro, salió feliz y con el corte que quería."</p>
+          <div class="testi-author"><div class="testi-avatar">R</div><div class="testi-meta"><div class="name">Rodrigo A.</div><div class="role">Corte infantil</div></div></div>
         </div>
       </div>
     </div>
