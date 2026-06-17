@@ -34,7 +34,7 @@ function buildMonthSheet(sheet, date) {
   var month = date.getMonth();
   var daysInMonth = new Date(year, month + 1, 0).getDate();
   var header = ['Dia'].concat(SLOTS);
-  sheet.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight('bold').setBackground('#111111').setFontColor('#E6E628');
+  sheet.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight('bold').setBackground('#FFFFFF').setFontColor('#000000');
   sheet.setFrozenRows(1);
   sheet.setColumnWidth(1, 90);
   for (var c = 2; c <= SLOTS.length + 1; c++) sheet.setColumnWidth(c, 145);
@@ -42,11 +42,11 @@ function buildMonthSheet(sheet, date) {
     var dow = new Date(year, month, d).getDay();
     var label = DAYS_ES[dow] + ' ' + (d < 10 ? '0'+d : d);
     var row = d + 1;
-    sheet.getRange(row, 1).setValue(label).setFontWeight('bold').setBackground('#1c1c1c').setFontColor('#ffffff');
+    sheet.getRange(row, 1).setValue(label).setFontWeight('bold').setBackground('#FFFFFF').setFontColor('#000000');
     if (dow === 1) {
-      sheet.getRange(row, 2, 1, SLOTS.length).setValue('CERRADO').setBackground('#2a2020').setFontColor('#555555').setHorizontalAlignment('center');
+      sheet.getRange(row, 2, 1, SLOTS.length).setValue('CERRADO').setBackground('#F0F0F0').setFontColor('#CCCCCC').setHorizontalAlignment('center');
     } else {
-      sheet.getRange(row, 2, 1, SLOTS.length).setBackground('#1a1a1a').setFontColor('#cccccc').setVerticalAlignment('top').setWrap(true);
+      sheet.getRange(row, 2, 1, SLOTS.length).setBackground('#FFFFFF').setFontColor('#000000').setVerticalAlignment('top').setWrap(true);
     }
     sheet.setRowHeight(row, 60);
   }
@@ -113,14 +113,43 @@ function doPost(e) {
     var SEP = '─────';
     var entries = current === '' ? [] : current.split(SEP).map(function(x){ return x.trim(); }).filter(Boolean);
     if (entries.length >= 2) return jsonOut({ ok: false, error: 'Horario completo (2 turnos).' });
-    var newEntry = data.nombre + (data.apellido ? ' ' + data.apellido : '') + ' · ' + data.telefono;
-    var newVal = entries.length === 0 ? newEntry : entries[0] + '\n' + SEP + '\n' + newEntry;
-    cell.setValue(newVal);
-    cell.setBackground(entries.length === 1 ? '#2a1a1a' : '#1a2a1a');
+    var fullName = data.nombre + (data.apellido ? ' ' + data.apellido : '');
+    var phone = data.telefono.replace(/\D/g, '');
+    var whatsappUrl = 'https://wa.me/54' + phone;
+    var newEntry = '=HYPERLINK("' + whatsappUrl + '","' + fullName + ' · ' + data.telefono + '")';
+    if (entries.length === 0) {
+      cell.setFormula(newEntry);
+    } else {
+      cell.setValue(entries[0] + '\n' + SEP + '\n' + fullName + ' · ' + data.telefono);
+    }
+    cell.setBackground(entries.length === 1 ? '#FFFFFF' : '#90EE90').setFontColor('#000000');
     return jsonOut({ ok: true, silla: entries.length + 1 });
   } catch(err) { return jsonOut({ ok: false, error: err.message }); }
 }
 
 function jsonOut(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function repaintSheets() {
+  var ss = getSS();
+  var sheets = ss.getSheets();
+  for (var i = 0; i < sheets.length; i++) {
+    var sheet = sheets[i];
+    var maxRow = sheet.getLastRow();
+    var maxCol = sheet.getLastColumn();
+    if (maxRow < 2) continue;
+    sheet.getRange(1, 1, 1, maxCol).setBackground('#FFFFFF').setFontColor('#000000');
+    for (var r = 2; r <= maxRow; r++) {
+      var cell = sheet.getRange(r, 1);
+      var val = String(cell.getValue()).trim();
+      if (val === 'CERRADO') {
+        sheet.getRange(r, 2, 1, SLOTS.length).setBackground('#F0F0F0').setFontColor('#CCCCCC');
+      } else {
+        sheet.getRange(r, 2, 1, maxCol - 1).setBackground('#FFFFFF').setFontColor('#000000');
+      }
+      cell.setBackground('#FFFFFF').setFontColor('#000000');
+    }
+  }
+  Logger.log('Sheets repainted');
 }
