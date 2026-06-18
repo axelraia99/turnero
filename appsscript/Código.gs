@@ -30,6 +30,19 @@ function resetSheets() {
   Logger.log('✓ Sheets recreados con nuevos estilos');
 }
 
+function generateAllMonths() {
+  var ss = getSS();
+  var now = new Date();
+  var currentYear = now.getFullYear();
+  var currentMonth = now.getMonth();
+
+  for (var m = currentMonth; m <= 11; m++) {
+    var date = new Date(currentYear, m, 1);
+    getOrCreateMonthSheet(ss, date);
+  }
+  Logger.log('✓ Todos los meses generados hasta diciembre ' + currentYear);
+}
+
 function monthSheetName(date) {
   return MONTHS_ES[date.getMonth()] + ' ' + date.getFullYear();
 }
@@ -88,6 +101,10 @@ function doGet(e) {
   if (e.parameter.reset === 'true') {
     resetSheets();
     return jsonOut({ ok: true, msg: 'Sheets recreados' });
+  }
+  if (e.parameter.generate === 'true') {
+    generateAllMonths();
+    return jsonOut({ ok: true, msg: 'Todos los meses generados hasta diciembre' });
   }
   var fecha = e.parameter.fecha;
   var parts = fecha.split('-');
