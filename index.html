@@ -514,6 +514,54 @@
     color:var(--brand-green-deep);
   }
 
+  .peluquero-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .peluquero-card{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 24px;
+    cursor:pointer;
+    transition:all .2s;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .peluquero-card:hover{border-color:var(--line-strong)}
+  .peluquero-card.active{
+    border-color:var(--accent);
+    background:rgba(230,230,40,.06);
+  }
+  .peluquero-card .p-name{
+    font-family:'Fraunces',serif;
+    font-size:24px;
+    font-weight:400;
+  }
+  .peluquero-card .p-desc{
+    font-size:13px;
+    color:var(--ink-dim);
+    margin-top:4px;
+  }
+  .peluquero-card .p-check{
+    width:24px;height:24px;
+    border:1.5px solid var(--line-strong);
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    color:transparent;
+    transition:all .2s;
+  }
+  .peluquero-card.active .p-check{
+    border-color:var(--accent);
+    background:var(--accent);
+    color:var(--brand-green-deep);
+  }
+
   .hora-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
@@ -1254,6 +1302,29 @@
     <div class="reserva-step">
       <div class="step-head">
         <div class="step-num">03</div>
+        <div class="step-title">¿Con quién te atendés?</div>
+      </div>
+      <div class="peluquero-grid">
+        <div class="peluquero-card" data-silla="nico">
+          <div>
+            <div class="p-name">Nico</div>
+            <div class="p-desc">Cortes y estilo</div>
+          </div>
+          <div class="p-check">✓</div>
+        </div>
+        <div class="peluquero-card" data-silla="david">
+          <div>
+            <div class="p-name">David</div>
+            <div class="p-desc">Barbería clásica</div>
+          </div>
+          <div class="p-check">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reserva-step">
+      <div class="step-head">
+        <div class="step-num">04</div>
         <div class="step-title">Seleccioná el horario</div>
       </div>
       <div class="hora-grid" id="horaGrid"></div>
@@ -1689,7 +1760,8 @@
   let selectedService = { name: 'Corte de cabello', price: 14000 };
   let selectedHora = null;
   let selectedDateISO = null;
-  let ocupadosDelDia = [];
+  let selectedSilla = null;
+  let disponibilidadDelDia = { nico: [], david: [] };
 
   // =====================================================
   // DATE STRIP - Selector de días
@@ -1741,6 +1813,16 @@
     });
   });
 
+  document.querySelectorAll('.peluquero-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.peluquero-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      selectedSilla = card.dataset.silla;
+      selectedHora = null;
+      renderHoras();
+    });
+  });
+
   // =====================================================
   // HORARIOS - se generan según el día elegido y el horario del salón
   // =====================================================
@@ -1763,25 +1845,31 @@
     return slots;
   }
 
-  // Consulta a la planilla qué horarios ya están reservados para una fecha.
-  async function fetchOcupados(fecha) {
-    if (!SHEETS_URL || SHEETS_URL === 'PASTE_YOUR_WEB_APP_URL_HERE') return [];
+  // Consulta a la planilla qué horarios están reservados por silla.
+  async function fetchDisponibilidad(fecha) {
+    if (!SHEETS_URL || SHEETS_URL === 'PASTE_YOUR_WEB_APP_URL_HERE') return { nico: [], david: [] };
     try {
       const res = await fetch(`${SHEETS_URL}?fecha=${encodeURIComponent(fecha)}`);
       const data = await res.json();
-      return Array.isArray(data.ocupados) ? data.ocupados : [];
+      return { nico: Array.isArray(data.nico) ? data.nico : [], david: Array.isArray(data.david) ? data.david : [] };
     } catch (err) {
       console.warn('No se pudo consultar la planilla de turnos:', err);
-      return [];
+      return { nico: [], david: [] };
     }
   }
 
   async function renderHoras() {
     const horaGrid = document.getElementById('horaGrid');
+
+    if (!selectedSilla) {
+      horaGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px 0;color:var(--ink-dim);font-size:13px;">Primero elegí con quién te atendés (paso 03).</div>`;
+      return;
+    }
+
     horaGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px 0;color:var(--ink-dim);font-size:13px;">Consultando disponibilidad…</div>`;
 
     const slots = generateSlotsForDate(selectedDateISO);
-    ocupadosDelDia = await fetchOcupados(selectedDateISO);
+    disponibilidadDelDia = await fetchDisponibilidad(selectedDateISO);
     horaGrid.innerHTML = '';
 
     if (slots.length === 0) {
@@ -1795,11 +1883,12 @@
 
     const isToday = selectedDateISO === getISODate(today);
     const nowMinutes = today.getHours() * 60 + today.getMinutes();
+    const ocupadosSilla = disponibilidadDelDia[selectedSilla] || [];
 
     slots.forEach(timeStr => {
       const [h, mi] = timeStr.split(':').map(Number);
       const isPast = isToday && (h * 60 + mi) <= nowMinutes;
-      const isTaken = ocupadosDelDia.includes(timeStr);
+      const isTaken = ocupadosSilla.includes(timeStr);
       const disabled = isPast || isTaken;
       const chip = document.createElement('div');
       chip.className = 'hora-chip' + (disabled ? ' disabled' : '');
@@ -1884,14 +1973,20 @@
 
   document.getElementById('btnConfirmarReserva').addEventListener('click', (e) => {
     e.preventDefault();
+    if(!selectedSilla){
+      alert('Seleccioná con quién te atendés (paso 03).');
+      return;
+    }
     if(!selectedHora){
       alert('Seleccioná un horario antes de confirmar la reserva.');
       return;
     }
+    const sillaLabel = selectedSilla === 'nico' ? 'Nico' : 'David';
     modalSummary.innerHTML = `
       <div>📅 <strong>Día:</strong> ${selectedDateISO}</div>
       <div>🕒 <strong>Hora:</strong> ${selectedHora}</div>
       <div>✂️ <strong>Servicio:</strong> ${selectedService.name}</div>
+      <div>💈 <strong>Silla:</strong> ${sillaLabel}</div>
       <div>💰 <strong>Total:</strong> $${selectedService.price.toLocaleString('es-AR')}</div>
     `;
     hideModalMsg();
@@ -1921,12 +2016,13 @@
     btnEnviar.textContent = 'Reservando…';
     hideModalMsg();
 
+    const sillaLabel = selectedSilla === 'nico' ? 'Nico' : 'David';
     if (SHEETS_URL && SHEETS_URL !== 'PASTE_YOUR_WEB_APP_URL_HERE') {
       try {
         // Verificar disponibilidad con GET (sin CORS issues)
-        const ocupados = await fetchOcupados(selectedDateISO);
-        if (ocupados.includes(selectedHora)) {
-          showModalMsg('Ese horario acaba de ser reservado por otra persona. Elegí otro.');
+        const disp = await fetchDisponibilidad(selectedDateISO);
+        if ((disp[selectedSilla] || []).includes(selectedHora)) {
+          showModalMsg('Ese horario acaba de ser reservado. Elegí otro.');
           btnEnviar.disabled = false;
           btnEnviar.innerHTML = 'Reservar <span class="arrow">→</span>';
           renderHoras();
@@ -1944,6 +2040,7 @@
             nombre: first_name,
             apellido: last_name,
             telefono: phone,
+            silla: selectedSilla,
           }),
         });
       } catch (err) {
@@ -1959,6 +2056,7 @@
       `Hola! Quiero reservar un turno.\n` +
       `Nombre: ${first_name} ${last_name}\n` +
       `Servicio: ${selectedService.name}\n` +
+      `Silla: ${sillaLabel}\n` +
       `Día: ${selectedDateISO}\n` +
       `Hora: ${selectedHora}\n` +
       `Total estimado: $${selectedService.price.toLocaleString('es-AR')}`

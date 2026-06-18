@@ -115,24 +115,30 @@ function doGet(e) {
   try {
     var ss = getSS();
     var sheet = ss.getSheetByName(monthSheetName(new Date(y, m - 1, 1)));
-    if (!sheet) return jsonOut({ ocupados: [] });
+    if (!sheet) return jsonOut({ nico: [], david: [] });
     var row = dateRow(fecha);
     var vals = sheet.getRange(row, 2, 1, SLOTS.length).getValues()[0];
-    var ocupados = [];
+    var nicoOcupados = [];
+    var davidOcupados = [];
     for (var i = 0; i < vals.length; i++) {
       var v = String(vals[i]).trim();
-      if (v === 'CERRADO') { ocupados.push(SLOTS[i]); continue; }
+      if (v === 'CERRADO') { nicoOcupados.push(SLOTS[i]); davidOcupados.push(SLOTS[i]); continue; }
       var entries = v.split('─────').filter(function(x){ return x.trim() !== ''; });
-      if (entries.length >= 2) ocupados.push(SLOTS[i]);
+      for (var j = 0; j < entries.length; j++) {
+        var entry = entries[j].trim().toLowerCase();
+        if (entry.indexOf('nico:') === 0) nicoOcupados.push(SLOTS[i]);
+        if (entry.indexOf('david:') === 0) davidOcupados.push(SLOTS[i]);
+      }
     }
-    return jsonOut({ ocupados: ocupados });
-  } catch(err) { return jsonOut({ ocupados: [], error: err.message }); }
+    return jsonOut({ nico: nicoOcupados, david: davidOcupados });
+  } catch(err) { return jsonOut({ nico: [], david: [], error: err.message }); }
 }
 
 function doPost(e) {
   var data = JSON.parse(e.postData.contents);
-  if (!data.fecha || !data.hora || !data.nombre || !data.telefono)
+  if (!data.fecha || !data.hora || !data.nombre || !data.telefono || !data.silla)
     return jsonOut({ ok: false, error: 'Faltan datos.' });
+  var sillaNombre = data.silla === 'nico' ? 'Nico' : 'David';
   var parts = data.fecha.split('-');
   var y = parseInt(parts[0]), m = parseInt(parts[1]);
   try {
@@ -148,18 +154,24 @@ function doPost(e) {
     if (current === 'CERRADO') return jsonOut({ ok: false, error: 'Dia cerrado.' });
     var SEP = '─────';
     var entries = current === '' ? [] : current.split(SEP).map(function(x){ return x.trim(); }).filter(Boolean);
-    if (entries.length >= 2) return jsonOut({ ok: false, error: 'Horario completo (2 turnos).' });
+    var sillaOcupada = entries.some(function(en) {
+      return en.toLowerCase().indexOf(sillaNombre.toLowerCase() + ':') === 0;
+    });
+    if (sillaOcupada) return jsonOut({ ok: false, error: 'Silla ' + sillaNombre + ' ya ocupada en este horario.' });
     var fullName = data.nombre + (data.apellido ? ' ' + data.apellido : '');
     var phone = data.telefono.replace(/\D/g, '');
     var whatsappUrl = 'https://wa.me/54' + phone;
-    var newEntry = '=HYPERLINK("' + whatsappUrl + '","' + fullName + ' · ' + data.telefono + '")';
+    var displayText = sillaNombre + ': ' + fullName + ' · ' + data.telefono;
     if (entries.length === 0) {
-      cell.setFormula(newEntry);
+      cell.setFormula('=HYPERLINK("' + whatsappUrl + '","' + displayText + '")');
     } else {
-      cell.setValue(entries[0] + '\n' + SEP + '\n' + fullName + ' · ' + data.telefono);
+      cell.setValue(entries[0] + '\n' + SEP + '\n' + displayText);
     }
-    cell.setBackground(entries.length === 1 ? '#FFFFFF' : '#90EE90').setFontColor('#000000');
-    return jsonOut({ ok: true, silla: entries.length + 1 });
+    var newEntries = entries.concat([displayText]);
+    var ambosOcupados = newEntries.some(function(en){ return en.toLowerCase().indexOf('nico:') === 0; }) &&
+                        newEntries.some(function(en){ return en.toLowerCase().indexOf('david:') === 0; });
+    cell.setBackground(ambosOcupados ? '#90EE90' : '#FFFFFF').setFontColor('#000000');
+    return jsonOut({ ok: true, silla: sillaNombre });
   } catch(err) { return jsonOut({ ok: false, error: err.message }); }
 }
 
