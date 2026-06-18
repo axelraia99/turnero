@@ -18,6 +18,18 @@ function setupSS() {
   Logger.log('Listo. URL: ' + ss.getUrl());
 }
 
+function resetSheets() {
+  var ss = getSS();
+  var sheets = ss.getSheets();
+  for (var i = sheets.length - 1; i > 0; i--) ss.deleteSheet(sheets[i]);
+  sheets[0].clear();
+  var now = new Date();
+  var next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  getOrCreateMonthSheet(ss, now);
+  getOrCreateMonthSheet(ss, next);
+  Logger.log('✓ Sheets recreados con nuevos estilos');
+}
+
 function monthSheetName(date) {
   return MONTHS_ES[date.getMonth()] + ' ' + date.getFullYear();
 }
@@ -34,7 +46,7 @@ function buildMonthSheet(sheet, date) {
   var month = date.getMonth();
   var daysInMonth = new Date(year, month + 1, 0).getDate();
   var header = ['Dia'].concat(SLOTS);
-  sheet.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight('bold').setBackground('#FFFFFF').setFontColor('#000000');
+  sheet.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight('bold').setBackground('#FFFFFF').setFontColor('#000000').setHorizontalAlignment('center').setVerticalAlignment('middle');
   sheet.setFrozenRows(1);
   sheet.setColumnWidth(1, 90);
   for (var c = 2; c <= SLOTS.length + 1; c++) sheet.setColumnWidth(c, 145);
@@ -42,11 +54,11 @@ function buildMonthSheet(sheet, date) {
     var dow = new Date(year, month, d).getDay();
     var label = DAYS_ES[dow] + ' ' + (d < 10 ? '0'+d : d);
     var row = d + 1;
-    sheet.getRange(row, 1).setValue(label).setFontWeight('bold').setBackground('#FFFFFF').setFontColor('#000000');
+    sheet.getRange(row, 1).setValue(label).setFontWeight('bold').setBackground('#FFFFFF').setFontColor('#000000').setHorizontalAlignment('center').setVerticalAlignment('middle');
     if (dow === 1) {
-      sheet.getRange(row, 2, 1, SLOTS.length).setValue('CERRADO').setBackground('#F0F0F0').setFontColor('#CCCCCC').setHorizontalAlignment('center');
+      sheet.getRange(row, 2, 1, SLOTS.length).setValue('CERRADO').setBackground('#FFFFFF').setFontColor('#000000').setHorizontalAlignment('center').setVerticalAlignment('middle');
     } else {
-      sheet.getRange(row, 2, 1, SLOTS.length).setBackground('#FFFFFF').setFontColor('#000000').setVerticalAlignment('top').setWrap(true);
+      sheet.getRange(row, 2, 1, SLOTS.length).setBackground('#FFFFFF').setFontColor('#000000').setVerticalAlignment('middle').setHorizontalAlignment('center').setWrap(true);
     }
     sheet.setRowHeight(row, 60);
   }
@@ -73,6 +85,10 @@ function slotCol(hora) {
 }
 
 function doGet(e) {
+  if (e.parameter.reset === 'true') {
+    resetSheets();
+    return jsonOut({ ok: true, msg: 'Sheets recreados' });
+  }
   var fecha = e.parameter.fecha;
   var parts = fecha.split('-');
   var y = parseInt(parts[0]), m = parseInt(parts[1]);
