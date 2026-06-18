@@ -1913,25 +1913,37 @@
   // =====================================================
   // ESTADO DE LAS SILLAS - próximo turno libre, según horarios reales
   // =====================================================
-  function updateChairsStatus() {
+  async function updateChairsStatus() {
     const cards = document.querySelectorAll('.sillas-grid .silla-card');
-    const slots = generateSlotsForDate(getISODate(today));
+    const todayISO = getISODate(today);
+    const slots = generateSlotsForDate(todayISO);
+    const disp = await fetchDisponibilidad(todayISO);
     const nowMinutes = today.getHours() * 60 + today.getMinutes();
-    const future = slots.filter(t => {
-      const [h, mi] = t.split(':').map(Number);
-      return (h * 60 + mi) > nowMinutes;
-    });
+
+    const sillas = [
+      { name: 'nico', ocupados: disp.nico },
+      { name: 'david', ocupados: disp.david }
+    ];
 
     cards.forEach((card, idx) => {
+      if (idx >= sillas.length) return;
+      const silla = sillas[idx];
       const pill = card.querySelector('.status-pill');
       const valEl = card.querySelector('.silla-next .val');
-      const next = future[idx];
-      if (!next) {
+
+      const future = slots.filter(t => {
+        const [h, mi] = t.split(':').map(Number);
+        return (h * 60 + mi) > nowMinutes && !silla.ocupados.includes(t);
+      });
+
+      if (future.length === 0) {
         pill.className = 'status-pill status-busy';
         pill.textContent = 'Cerrado';
         valEl.textContent = '—';
         return;
       }
+
+      const next = future[0];
       const [h, mi] = next.split(':').map(Number);
       const freeNow = (h * 60 + mi) - nowMinutes <= 15;
       if (freeNow) {
