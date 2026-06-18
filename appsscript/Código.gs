@@ -38,6 +38,9 @@ function generateAllMonths() {
 
   for (var m = currentMonth; m <= 11; m++) {
     var date = new Date(currentYear, m, 1);
+    var sheetName = monthSheetName(date);
+    var sheet = ss.getSheetByName(sheetName);
+    if (sheet) ss.deleteSheet(sheet);
     getOrCreateMonthSheet(ss, date);
   }
   Logger.log('✓ Todos los meses generados hasta diciembre ' + currentYear);
